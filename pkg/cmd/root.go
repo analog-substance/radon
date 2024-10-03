@@ -143,7 +143,7 @@ func init() {
 	RootCmd.Flags().IntP("max-attempts", "a", 4, "Number of failed attempts before we give up")
 	RootCmd.Flags().BoolVar(&debug, "debug", false, "Display debug information")
 	RootCmd.Flags().Bool("invoke-random", false, "Jumble used tokens to make new subdomains.")
-	RootCmd.Flags().Bool("permute", false, "Permute domains.")
+	RootCmd.Flags().BoolP("permute", "p", false, "Permute domains.")
 
 }
 
