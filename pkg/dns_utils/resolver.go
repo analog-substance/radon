@@ -125,7 +125,7 @@ func lookupMX(domain string, attemptNumber int, lookupTimeout time.Duration, max
 	}
 
 	for _, mxRec := range mxDNS {
-		mx = append(mx, fmt.Sprintf("%s", mxRec))
+		mx = append(mx, mxRec.String())
 	}
 
 	return mx, err
@@ -212,43 +212,40 @@ func Run(domains []string, resolveConf string, concurrency int, lookupTimeout ti
 
 		i := 0
 	Loop:
-		for {
-			select {
-			case result := <-ch:
-				output := []string{}
+		for result := range ch {
+			output := []string{}
 
-				logger.Debug("domain result", "result", result)
+			logger.Debug("domain result", "result", result)
 
-				for _, ip := range result.addresses {
-					if slices.Contains(ignoreAddrs, ip) {
-						continue
-					}
-					output = append(output, fmt.Sprintf("%s has address %s\n", result.domain, ip))
+			for _, ip := range result.addresses {
+				if slices.Contains(ignoreAddrs, ip) {
+					continue
 				}
+				output = append(output, fmt.Sprintf("%s has address %s\n", result.domain, ip))
+			}
 
-				for _, txt := range result.txt {
-					output = append(output, fmt.Sprintf("%s has TXT %s\n", result.domain, txt))
-				}
+			for _, txt := range result.txt {
+				output = append(output, fmt.Sprintf("%s has TXT %s\n", result.domain, txt))
+			}
 
-				for _, mx := range result.mx {
-					output = append(output, fmt.Sprintf("%s has MX %s\n", result.domain, mx))
-				}
+			for _, mx := range result.mx {
+				output = append(output, fmt.Sprintf("%s has MX %s\n", result.domain, mx))
+			}
 
-				for _, host := range result.hosts {
-					output = append(output, fmt.Sprintf("%s domain name pointer %s\n", result.domain, host))
-				}
+			for _, host := range result.hosts {
+				output = append(output, fmt.Sprintf("%s domain name pointer %s\n", result.domain, host))
+			}
 
-				if len(result.cName) > 0 {
-					if !slices.Contains(ignoreAliases, result.cName) {
-						output = append(output, fmt.Sprintf("%s is an alias for %s\n", result.domain, result.cName))
-					}
+			if len(result.cName) > 0 {
+				if !slices.Contains(ignoreAliases, result.cName) {
+					output = append(output, fmt.Sprintf("%s is an alias for %s\n", result.domain, result.cName))
 				}
+			}
 
-				syncPrintf(strings.Join(output, ""))
-				i++
-				if i == numDomains {
-					break Loop
-				}
+			syncPrintf(strings.Join(output, ""))
+			i++
+			if i == numDomains {
+				break Loop
 			}
 		}
 	}
